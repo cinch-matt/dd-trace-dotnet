@@ -28,9 +28,26 @@ namespace Datadog.Trace.PlatformHelpers
         /// </summary>
         internal static readonly string SiteNameKey = "WEBSITE_DEPLOYMENT_ID";
 
+        private static readonly Lazy<string> SubscriptionId = new Lazy<string>(GetSubscriptionIdInternal, LazyThreadSafetyMode.ExecutionAndPublication);
+
         private static readonly Lazy<string> ResourceId = new Lazy<string>(GetResourceIdInternal, LazyThreadSafetyMode.ExecutionAndPublication);
 
         private static readonly Lazy<bool> IsRunningInAzureAppServices = new Lazy<bool>(IsRelevantInternal, LazyThreadSafetyMode.ExecutionAndPublication);
+
+        public static string GetResourceGroup()
+        {
+            return Environment.GetEnvironmentVariable(ResourceGroupKey);
+        }
+
+        public static string GetSiteName()
+        {
+            return Environment.GetEnvironmentVariable(SiteNameKey);
+        }
+
+        public static string GetSubscriptionId()
+        {
+            return SubscriptionId.Value;
+        }
 
         public static string GetResourceId()
         {
@@ -53,37 +70,23 @@ namespace Datadog.Trace.PlatformHelpers
 
             try
             {
-                var environmentVariables = Environment.GetEnvironmentVariables();
-
-                string subscriptionId = null;
-
-                if (environmentVariables.Contains(WebsiteOwnerNameKey))
-                {
-                    var websiteOwner = environmentVariables[WebsiteOwnerNameKey].ToString();
-                    var plusSplit = websiteOwner.Split('+');
-                    if (plusSplit.Length > 0 && !string.IsNullOrWhiteSpace(plusSplit[0]))
-                    {
-                        subscriptionId = plusSplit[0];
-                    }
-                }
-
-                var siteName = GetVariableIfExists(environmentVariables, SiteNameKey);
-                var siteResourceGroup = GetVariableIfExists(environmentVariables, ResourceGroupKey);
                 var success = true;
-
+                var subscriptionId = GetSubscriptionIdInternal();
                 if (subscriptionId == null)
                 {
                     success = false;
                     DatadogLogging.RegisterStartupLog(log => log.Warning("Could not successfully retrieve the subscription ID from variable: {0}", WebsiteOwnerNameKey));
                 }
 
+                var siteName = GetSiteName();
                 if (siteName == null)
                 {
                     success = false;
                     DatadogLogging.RegisterStartupLog(log => log.Warning("Could not successfully retrieve the deployment ID from variable: {0}", SiteNameKey));
                 }
 
-                if (siteResourceGroup == null)
+                var resourceGroup = GetResourceGroup();
+                if (resourceGroup == null)
                 {
                     success = false;
                     DatadogLogging.RegisterStartupLog(log => log.Warning("Could not successfully retrieve the resource group name from variable: {0}", ResourceGroupKey));
@@ -91,7 +94,7 @@ namespace Datadog.Trace.PlatformHelpers
 
                 if (success)
                 {
-                    resourceId = $"/subscriptions/{subscriptionId}/resourcegroups/{siteResourceGroup}/providers/microsoft.web/sites/{siteName}".ToLowerInvariant();
+                    resourceId = $"/subscriptions/{subscriptionId}/resourcegroups/{resourceGroup}/providers/microsoft.web/sites/{siteName}".ToLowerInvariant();
                 }
             }
             catch (Exception ex)
@@ -102,11 +105,16 @@ namespace Datadog.Trace.PlatformHelpers
             return resourceId;
         }
 
-        private static string GetVariableIfExists(IDictionary environmentVariables, string key)
+        private static string GetSubscriptionIdInternal()
         {
-            if (environmentVariables.Contains(key))
+            var websiteOwner = Environment.GetEnvironmentVariable(WebsiteOwnerNameKey);
+            if (!string.IsNullOrWhiteSpace(websiteOwner))
             {
-                return environmentVariables[key].ToString();
+                var plusSplit = websiteOwner.Split('+');
+                if (plusSplit.Length > 0 && !string.IsNullOrWhiteSpace(plusSplit[0]))
+                {
+                    return plusSplit[0];
+                }
             }
 
             return null;

@@ -509,6 +509,9 @@ namespace Datadog.Trace
                 if (azureAppServiceResourceId != null)
                 {
                     span.SetTag(Tags.AzureAppServicesResourceId, azureAppServiceResourceId);
+                    span.SetTag(Tags.AzureAppServicesSiteName, AzureAppServicesMetadata.GetSiteName());
+                    span.SetTag(Tags.AzureAppServicesResourceGroup, AzureAppServicesMetadata.GetResourceGroup());
+                    span.SetTag(Tags.AzureAppServicesSubscriptionId, AzureAppServicesMetadata.GetSubscriptionId());
                 }
             }
         }
