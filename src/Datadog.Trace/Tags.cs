@@ -187,17 +187,17 @@ namespace Datadog.Trace
         public const string AzureAppServicesResourceId = "aas.resource.id";
 
         /// <summary>
-        /// The resource id of the site instance in azure app services where the traced application is running.
+        /// The resource group of the site instance in azure app services where the traced application is running.
         /// </summary>
         public const string AzureAppServicesResourceGroup = "aas.resource.group";
 
         /// <summary>
-        /// The resource id of the site instance in azure app services where the traced application is running.
+        /// The site name of the site instance in azure app services where the traced application is running.
         /// </summary>
         public const string AzureAppServicesSiteName = "aas.site.name";
 
         /// <summary>
-        /// The resource id of the site instance in azure app services where the traced application is running.
+        /// The subscription id of the site instance in azure app services where the traced application is running.
         /// </summary>
         public const string AzureAppServicesSubscriptionId = "aas.subscription.id";
     }
